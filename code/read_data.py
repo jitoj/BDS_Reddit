@@ -1,7 +1,7 @@
 import os
-import sys
 import json
 import signal
+from sys import stdout
 from collections import Counter,defaultdict
 
 redditcount=defaultdict(Counter)
@@ -20,7 +20,9 @@ def signal_handler(signal, frame):
 def process_line(data):
 	global redditcount,line_count
 	try:
-		print "Reading line:",line_count," ",data["subreddit"]," ",data["author"]
+		if line_count%1==0:
+			stdout.write("\rReading line: %s" % line_count)
+			stdout.flush()
 		redditcount[data["subreddit"]][data["author"]]+=1
 		line_count+=1
 	except:
@@ -47,7 +49,7 @@ def write_output(outfile):
 	try:
 		for subreddit,authors in redditcount.iteritems():		
 			outfile.write(subreddit+','+str(len(authors)))
-			print "Writing subreddit:",subreddit
+			#print "Writing subreddit:",subreddit
 			for author,count in authors.iteritems():
 				outfile.write(','+author+','+str(count))
 			outfile.write('\n')
@@ -62,7 +64,6 @@ def close_file(closefile):
 if __name__ == "__main__":
 	signal.signal(signal.SIGINT, signal_handler)
 	signal.signal(signal.SIGTSTP, signal_handler)
-	global line
 	#infile = open('data/RC_2015-05','r')
 	#outfile = open('data/redditcounts.csv','w+')	
 	infile = open('../data/li.txt','r')
