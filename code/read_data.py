@@ -1,47 +1,46 @@
 import os
 import json
 import signal
+import time,timeit
 from sys import stdout
 from collections import Counter,defaultdict
 
 redditcount=defaultdict(Counter)
-line_count=1
 
 def signal_handler(signal, frame):
 	if(raw_input("\nQuit [y/n]?").lower()=='y'):
 		close_file(infile)
 		write_output(outfile)
 		close_file(outfile)
+		print "\nExiting on interrupt"
 		quit()
 	else:
 		return
 
 
-def process_line(data):
-	global redditcount,line_count
+def process_line(line_count,data):
+	global redditcount
 	try:
-		if line_count%1==0:
-			stdout.write("\rReading line: %s" % line_count)
-			stdout.flush()
+		stdout.write("\rReading line: %d" % line_count)
+		stdout.flush()
 		redditcount[data["subreddit"]][data["author"]]+=1
-		line_count+=1
 	except:
+		print "Error in process_line"
 		return
 
 
 def process_file(infile,outfile):
-	global line_count
 	try:
-		line=infile.readline()
-		while line != '':# and line_count<10000:
-		 if '[deleted]' not in line:
+		for line_count,line in enumerate(infile):#while line != '':# and line_count<10000:
+		 if '[deleted]' not in line.rstrip():
 		 	try:
-			 	data=json.loads(line)
-				process_line(data)
+			 	data=json.loads(line.rstrip())
+				process_line(line_count,data)
 			except:
-				pass
-		 line=infile.readline()
+				print "Error processing json"
+				return
 	except:
+		print "Error processing file"
 		return
 
 def write_output(outfile):
@@ -49,11 +48,11 @@ def write_output(outfile):
 	try:
 		for subreddit,authors in redditcount.iteritems():		
 			outfile.write(subreddit+','+str(len(authors)))
-			#print "Writing subreddit:",subreddit
 			for author,count in authors.iteritems():
 				outfile.write(','+author+','+str(count))
 			outfile.write('\n')
 	except:
+		print "Error in write_output"
 		return	
 
 def close_file(closefile):
@@ -62,17 +61,17 @@ def close_file(closefile):
 
 
 if __name__ == "__main__":
+	start=timeit.default_timer()
+
 	signal.signal(signal.SIGINT, signal_handler)
 	signal.signal(signal.SIGTSTP, signal_handler)
-	#infile = open('data/RC_2015-05','r')
-	#outfile = open('data/redditcounts.csv','w+')	
 	infile = open('../data/li.txt','r')
 	outfile = open('../data/redditcounts.csv','w+')
-	try:
-		process_file(infile,outfile)
-		close_file(infile)
-	except:
-		pass
+	
+	process_file(infile,outfile)
+	close_file(infile)
+	
 	write_output(outfile)
 	close_file(outfile)
+	print "\nExiting normally\nRuntime:",time.strftime('%H:%M:%S',time.gmtime(timeit.default_timer()-start))
 	quit()
