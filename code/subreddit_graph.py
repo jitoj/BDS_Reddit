@@ -38,7 +38,7 @@ if __name__ == "__main__":
 		rcolor=["#70b0c5","#2ca25f","#fff7bc","#bcbddc"]
 		try:
 			start = datetime.now()
-			sorted_G=sorted(G[node], key=lambda (target): G[node][target],reverse=True)[:10]
+			sorted_G=sorted(G[node], key=lambda (target): G[node][target],reverse=True)[:30]
 			H=nx.Graph()
 			print '-' * 43
 			print '   RANK SUBREDDIT                 WEIGHT'
@@ -46,7 +46,7 @@ if __name__ == "__main__":
 			for i,item in enumerate(sorted_G):
 				print ("%7d %-25s %-7d"%(i+1,item, G[node][item]['weight']))
 				H.add_edge(node,item,weight=G[node][item]['weight'])
-				print "\nRUNTIME: get_neighbours()",datetime.now()-start
+			print "\nRUNTIME: get_neighbours()",datetime.now()-start
 			try:
 				pos = nx.spring_layout(H)
 				edge_weight=dict([((u,v,),int(d['weight'])) for u,v,d in H.edges(data=True)])
